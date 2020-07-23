@@ -5,36 +5,58 @@ import requests
 from flask import Flask, jsonify, request
 from backend.blockchain.blockchain import Blockchain
 from backend.pubsub import PubSub
+from backend.wallet.wallet import Wallet
+from backend.wallet.transaction import Transaction
+from backend.wallet.transaction_pool import TransactionPool
 
 app = Flask(__name__)
 
 blockchain = Blockchain()
-for i in range(3):
-    blockchain.add_block(i)
+wallet = Wallet()
+transaction_pool = TransactionPool()
 
-pubsub = PubSub(blockchain)
+pubsub = PubSub(blockchain, transaction_pool)
+
 
 @app.route('/')
 def index():
     return '<h1>Index page</h1>'
 
+
 @app.route('/blockchain')
 def route_blockchain():
     return jsonify(blockchain.to_json())
 
-@app.route('/blockchain/mine', methods=['GET', 'POST'])
+
+@app.route('/blockchain/mine')
 def route_blockchain_mine():
-    if request.method == 'GET':
-        return '''
-        <form action="/blockchain/mine" method="POST">
-            <button type="submit">Mine</button>
-        </form>
-        '''
-    elif request.method == 'POST':
-        blockchain.add_block('dummy-data')
-        mined_data = blockchain.chain[-1]
-        pubsub.broadcast_block(mined_data)
-        return jsonify(mined_data.to_json())
+    transaction_data = transaction_pool.transaction_data()
+    blockchain.add_block(transaction_data)
+    mined_data = blockchain.chain[-1]
+    pubsub.broadcast_block(mined_data)
+    transaction_pool.clear_blockchain_transactions(blockchain)
+    
+    return jsonify(mined_data.to_json())
+
+
+@app.route('/wallet/transact', methods=['POST'])
+def route_wallet_transact():
+    tranasction_data = request.get_json()
+    transaction = transaction_pool.existing_transaction(wallet.address)
+    if transaction:
+        transaction.update(
+            wallet,
+            tranasction_data['recipient'],
+            tranasction_data['amount']
+        )
+    else:
+        transaction = Transaction(
+            wallet,
+            tranasction_data['recipient'],
+            tranasction_data['amount']
+        )
+    pubsub.brodcast_transaction(transaction)
+    return jsonify(transaction.to_json())
 
 ROOT_PORT = 5000
 PORT = ROOT_PORT

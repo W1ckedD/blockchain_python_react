@@ -19,7 +19,7 @@ def test_transaction():
     assert transaction.input['public_key'] == sender_wallet.public_key
 
     assert Wallet.verify(
-        transaction.input['public_key'], transaction.output, transaction.input['signiture'])
+        transaction.input['public_key'], transaction.output, transaction.input['signature'])
 
 
 def test_transaction_exceeds_balance():
@@ -51,7 +51,7 @@ def test_transaction_update():
     assert transaction.output[sender_wallet.address] == sender_wallet.balance - \
         first_amount - next_amount
     assert Wallet.verify(
-        transaction.input['public_key'], transaction.output, transaction.input['signiture'])
+        transaction.input['public_key'], transaction.output, transaction.input['signature'])
 
     to_first_again_amount = 25
 
@@ -60,7 +60,7 @@ def test_transaction_update():
     assert transaction.output[sender_wallet.address] == sender_wallet.balance - \
         first_amount - next_amount - to_first_again_amount
     assert Wallet.verify(
-        transaction.input['public_key'], transaction.output, transaction.input['signiture'])
+        transaction.input['public_key'], transaction.output, transaction.input['signature'])
 
 def test_is_valid_transaction():
     Transaction.is_valid_transaction(Transaction(Wallet(), 'recipient', 50))
@@ -73,9 +73,9 @@ def test_is_valid_transaction_ivalid_outputs():
     with pytest.raises(Exception, match='Invalid transaction output values'):
         Transaction.is_valid_transaction(transaction)
 
-def test_is_valid_transaction_invalid_signiture():
+def test_is_valid_transaction_invalid_signature():
     sender_wallet = Wallet()
     transaction = Transaction(sender_wallet, 'recipient', 100)
-    transaction.input['signiture'] = Wallet().sign(transaction.output)
-    with pytest.raises(Exception, match='Invalid signiture'):
+    transaction.input['signature'] = Wallet().sign(transaction.output)
+    with pytest.raises(Exception, match='Invalid signature'):
         Transaction.is_valid_transaction(transaction)

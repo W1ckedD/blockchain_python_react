@@ -9,10 +9,19 @@ class Transaction:
     Document of an exchange in currency from a sender to one or more recipients
     '''
 
-    def __init__(self, sender_wallet, recipient, amount):
-        self.id = str(uuid.uuid4())[0:8]
-        self.output = self.create_output(sender_wallet, recipient, amount)
-        self.input = self.create_input(sender_wallet, self.output)
+    def __init__(
+            self,
+            sender_wallet=None,
+            recipient=None,
+            amount=None,
+            id=None,
+            input=None,
+            output=None
+        ):
+        self.id = id or str(uuid.uuid4())[0:8]
+        self.output = output or self.create_output(
+            sender_wallet, recipient, amount)
+        self.input = input or self.create_input(sender_wallet, self.output)
 
     def create_output(self, sender_wallet, recipient, amount):
         '''
@@ -35,7 +44,7 @@ class Transaction:
             'amount': sender_wallet.balance,
             'address': sender_wallet.address,
             'public_key': sender_wallet.public_key,
-            'signiture': sender_wallet.sign(output)
+            'signature': sender_wallet.sign(output)
         }
 
     def update(self, sender_wallet, recipient, amount):
@@ -55,6 +64,20 @@ class Transaction:
 
         self.input = self.create_input(sender_wallet, self.output)
 
+    def to_json(self):
+        '''
+        Serialize transaction
+        '''
+
+        return self.__dict__
+
+    @staticmethod
+    def from_json(transaction_json):
+        '''
+        Deserialize a transactions json representation back to a Transaction instance
+        '''
+        return Transaction(**transaction_json)
+
     @staticmethod
     def is_valid_transaction(transaction):
         '''
@@ -65,13 +88,16 @@ class Transaction:
         if transaction.input['amount'] != output_total:
             raise Exception('Invalid transaction output values')
 
-        if not Wallet.verify(transaction.input['public_key'], transaction.output, transaction.input['signiture']):
-            raise Exception('Invalid signiture')
+        if not Wallet.verify(transaction.input['public_key'], transaction.output, transaction.input['signature']):
+            raise Exception('Invalid signature')
 
 
 def main():
     transaction = Transaction(Wallet(), 'recipient', 100)
-    print(f'transaction.__dict__: {transaction.__dict__}')
+    print(f'transaction.__dict__: {transaction.__dict__}\n')
+
+    transaction_json = transaction.to_json()
+    print(f'restored_tranasction.__dict__: {Transaction.from_json(transaction_json).__dict__}')
 
 
 if __name__ == '__main__':
