@@ -20,13 +20,17 @@ class Wallet:
     Allows a miner to authorize transactions.
     '''
 
-    def __init__(self):
+    def __init__(self, blockchain=None):
         self.address = str(uuid.uuid4())[0:8]
-        self.balance = STARTING_BALANCE
+        self.blockchain = blockchain
         self.private_key = ec.generate_private_key(
             ec.SECP256K1(), default_backend())
         self.public_key = self.private_key.public_key()
         self.seiralize_public_key()
+
+    @property
+    def balance(self):
+        return Wallet.calculate_balance(self.blockchain, self.address)
 
     def sign(self, data):
         '''
@@ -48,7 +52,7 @@ class Wallet:
         decoded_public_key = self.public_key_bytes.decode('utf-8')
         self.public_key = decoded_public_key
 
-    @ staticmethod
+    @staticmethod
     def verify(public_key, data, signature):
         '''
         Verify a signature based on the original public key and data.
@@ -64,7 +68,31 @@ class Wallet:
         except InvalidSignature:
             return False
 
+    @staticmethod
+    def calculate_balance(blockchain, address):
+        '''
+        Calculate the balance of the given address considering
+        the tarnsaction data within the blockchain.
 
+        The balance is found by adding the output values that belong to the address 
+        since the most recent transaction by that address
+        '''
+        balance = STARTING_BALANCE
+        
+        if not blockchain:
+            return balance
+        
+        for block in blockchain.chain:
+            for transaction in block.data:
+                if transaction['input']['address'] == address:
+                    # Any time the address conducts a new transaction
+                    # it resets its balance
+                    balance = transaction['output'][address]
+                elif address in transaction['output']:
+                    balance += transaction['output'][address]
+
+        return balance
+                     
 def main():
     wallet = Wallet()
     print(f'wallet.__dict__: {wallet.__dict__}')
