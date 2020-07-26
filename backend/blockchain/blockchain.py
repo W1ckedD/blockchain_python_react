@@ -1,5 +1,6 @@
 from backend.blockchain.block import Block
 from backend.wallet.transaction import Transaction
+from backend.wallet.wallet import Wallet
 from backend.config import MINING_REWARD_INPUT
 
 class Blockchain(object):
@@ -69,6 +70,8 @@ class Blockchain(object):
             last_block = chain[i-1]
             Block.is_valid_block(last_block, block)
 
+        Blockchain.is_valid_transaction_chain(chain)
+
     @staticmethod
     def is_valid_transaction_chain(chain):
         '''
@@ -78,8 +81,9 @@ class Blockchain(object):
             - Each transaction itself must be valid.
         '''
         transaction_ids = set()
-
-        for block in chain:
+        
+        for i in range(len(chain)):
+            block = chain[i]
             has_mining_reward = False
             for transaction_json in block.data:
                 transaction = Transaction.from_json(transaction_json)
@@ -96,5 +100,13 @@ class Blockchain(object):
                             f'Check block with hash {block.hash}'
                         )
                     has_mining_reward = True
-
-                Transaction.is_valid_transaction(transaction)
+                else:
+                    historic_blockchain = Blockchain()
+                    historic_blockchain.chain = chain[0:i]
+                    historic_balance = Wallet.calculate_balance(
+                        historic_blockchain,
+                        transaction.input['address']
+                    )
+                    if historic_balance != transaction.input['amount']:
+                        raise Exception(f'The transaction {transaction.id} has an invalid input amount')
+                    Transaction.is_valid_transaction(transaction)
