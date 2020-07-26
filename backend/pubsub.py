@@ -8,8 +8,8 @@ from backend.blockchain.block import Block
 from backend.wallet.transaction import Transaction
 
 
-publish_key = 'pub-c-73959d85-d697-4f74-9ed7-429f3161ede7'
-subscribe_key = 'sub-c-78643970-ae1b-11ea-becf-9a9682a3ac25'
+publish_key = 'YOUR_PUBLISH_KEY'
+subscribe_key = 'YOUR_SUBSCRIBE_KEY'
 
 
 pnconfig = PNConfiguration()
