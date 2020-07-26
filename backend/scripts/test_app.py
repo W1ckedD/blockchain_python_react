@@ -24,13 +24,13 @@ print(f'start_blockchain: {start_blockchain}')
 
 recipient = Wallet().address
 
-post_wallet_transact1 = post_wallet_transact(recipient, 19)
-print(f'\n post_wallet_transact1: {post_wallet_transact1}')
+# post_wallet_transact1 = post_wallet_transact(recipient, 19)
+# print(f'\n post_wallet_transact1: {post_wallet_transact1}')
 
-time.sleep(1)
+# time.sleep(1)
 
-post_wallet_transact2 = post_wallet_transact(recipient, 31)
-print(f'\n post_wallet_transact2: {post_wallet_transact2}')
+# post_wallet_transact2 = post_wallet_transact(recipient, 31)
+# print(f'\n post_wallet_transact2: {post_wallet_transact2}')
 
 
 time.sleep(3)
